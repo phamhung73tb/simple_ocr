@@ -4,6 +4,7 @@
 import random
 import torch
 from torchvision import models, transforms
+import cv2
 
 
 class HoadonOCR:
@@ -18,14 +19,15 @@ class HoadonOCR:
                             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                         ])
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.load_model()
 
     def load_model(self):
-        self.network = models.resnet18(pretrained=True)
-        num_ftrs = self.network.fc.in_features
-        self.network.fc = torch.nn.Linear(num_ftrs, len(self.labels))
-        self.network.load_state_dict(torch.load('model_resnet.pt'))
-        self.network.eval()
-        self.network.device()
+        self.model = models.resnet18(pretrained=True)
+        num_ftrs = self.model.fc.in_features
+        self.model.fc = torch.nn.Linear(num_ftrs, len(self.labels))
+        self.model.load_state_dict(torch.load('model_resnet.pt'))
+        self.model.eval()
+        self.model.to(self.device)
 
     # TODO: implement find label
     def find_label(self, img):
@@ -33,6 +35,6 @@ class HoadonOCR:
         with torch.no_grad():
             img = self.transform(img)
             img = torch.unsqueeze(img, 0)
-            y = self.network(img)
+            y = self.model(img)
             label = y.detach().cpu().numpy()[0]
-        return self.class_name[y]
+        return self.labels[label]
