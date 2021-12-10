@@ -13,7 +13,8 @@ import torch.nn.functional as F
 from torchvision import transforms
 from PIL import Image
 
-
+#mô hình deeplearing đc viết dựa trên pytorch
+#có những phép cnn, fully connected để huấn luyện mô hình.
 class Net(nn.Module):
     def __init__(self, class_names):
         super().__init__()
@@ -35,8 +36,8 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
 
-
 class HoadonOCR:
+    #khởi tạo các biến số
     def __init__(self):
         # Init parameters, load model here
         self.model = None
@@ -50,6 +51,7 @@ class HoadonOCR:
         self.device = torch.device("cpu")
         self.load_model()
 
+    #load trọng số model và mô hình
     def load_model(self):
         self.model = Net(class_names=self.class_names)
         self.model.load_state_dict(torch.load('model.pt', map_location=self.device))
