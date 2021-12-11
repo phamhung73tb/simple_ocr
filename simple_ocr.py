@@ -10,11 +10,23 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from torchvision import transforms
+from torchvision import transforms, models
+import torchvision
 from PIL import Image
 
 #mô hình deeplearing đc viết dựa trên pytorch
 #có những phép cnn, fully connected để huấn luyện mô hình.
+def resnet_18(class_names):
+    network = torchvision.models.resnet18(pretrained=True)
+    for param in network.parameters():
+        param.requires_grad = False
+
+    # Parameters of newly constructed modules have requires_grad=True by default
+    num_ftrs = network.fc.in_features
+    network.fc = nn.Linear(num_ftrs, len(class_names))
+    return network
+
+
 class Net(nn.Module):
     def __init__(self, class_names):
         super().__init__()
@@ -41,9 +53,10 @@ class HoadonOCR:
     def __init__(self):
         # Init parameters, load model here
         self.model = None
-        self.labels = ['highlands', 'starbucks', 'phuclong', 'others']
-        self.class_names = {'highlands': 0, 'starbucks': 1, 'phuclong': 2, 'others': 3}
+        self.labels = ['highlands', 'others', 'phuclong', 'starbucks']
+        self.class_names = {'highlands': 0, 'starbucks': 3, 'phuclong': 2, 'others': 1}
         self.transform =  transforms.Compose([
+                            transforms.Resize(256),
                             transforms.CenterCrop(224),
                             transforms.ToTensor(),
                             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -53,7 +66,7 @@ class HoadonOCR:
 
     #load trọng số model và mô hình
     def load_model(self):
-        self.model = Net(class_names=self.class_names)
+        self.model = resnet_18(class_names=self.class_names)
         self.model.load_state_dict(torch.load('model.pt', map_location=self.device))
         self.model.eval()
         self.model.to(self.device)
